@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TS2020KMLtoCSVConverter": {
+      "commandName": "Project",
+      "commandLineArgs": "--verbosity=\"all\" --logfilepath=\"C:\\Users\\afr\\OneDrive\\PROGETTO NODO DI TORINO\" --pathtokmlfiles=\"C:\\Users\\afr\\OneDrive\\PROGETTO NODO DI TORINO\\KML\" --pathforcsvfiles=\"C:\\Users\\afr\\OneDrive\\PROGETTO NODO DI TORINO\\CSV\""
+    }
+  }
+}

@@ -6,107 +6,102 @@ using System.Linq;
 
 namespace TS2020KMLtoCSVConverter
 {   
-    public static class Globalvariables
-    {
-        public static String Destinationpath = Path.Combine(Directory.GetCurrentDirectory(), "CSV");
-        public static String Csvfilenameroot = "";
-        public static String Logfilepath = Directory.GetCurrentDirectory();
-        public static String Logfilename = "log.txt";
-        public static String Originpath = Path.Combine(Directory.GetCurrentDirectory(), "KML");
-        public static String Originfilenamefilter = @"*.kml";
-        public static String Verbosity = "low";
-        public static String Logfile = Path.Combine(Globalvariables.Logfilepath, Globalvariables.Logfilename);
-
-        public static String[] GlobalVariablesValues()
-        {
-            String[] Values = { $"This log file is saved in the path {Globalvariables.Logfilepath} with the name {Globalvariables.Logfilename}.",
-                $"This log file verbosity is set to {Globalvariables.Verbosity}.",
-                $"Kml files origin path = {Globalvariables.Originpath}.",
-                $"Kml files name filter = {Globalvariables.Originfilenamefilter}.",
-                $"Csv files destination path = {Globalvariables.Destinationpath}.",
-                $"Csv files name root = {Globalvariables.Csvfilenameroot}."
-            };
-            return Values;
-        }
-
-        public static void RefreshDependents()
-        {
-            Globalvariables.Logfile = Path.Combine(Globalvariables.Logfilepath, Globalvariables.Logfilename);
-        }
-    }
     class Program
     {
+        /*
+         * These are the global variables that can be modified by the application of the appropriate command line argument
+         */
+        static String Destinationpath = Path.Combine(Directory.GetCurrentDirectory(), "CSV");
+        static String Csvfilenameroot = "";
+        static String Logfilepath = Directory.GetCurrentDirectory();
+        static String Logfilename = "log.txt";
+        static String Originpath = Path.Combine(Directory.GetCurrentDirectory(), "KML");
+        static String Originfilenamefilter = @"*.kml";
+        static String Verbosity = "low";
+        /*
+         * These are global variables that need refresh after the command line argument parsing
+         */
+        static String Logfile = "";
+        /*
+         * These are instead service variables, used to pass collections of datas from one block to another in the code.
+         */
+        static List<String> Directorylist = new List<String>();
+        static List<String> Filelist = new List<String>();
         static void Main(String[] Args)
         {
-            foreach (String Argument in Args)
+            if (Args.Any())
             {
-                String[] Splitargument = Argument.Split("=");
-                switch (Splitargument[0])
+                foreach (String Argument in Args)
                 {
-                    case "-D":
-                    case "--pathforcsvfiles":
-                        Globalvariables.Destinationpath = Splitargument[1];
-                        break;
-                    case "-d":
-                    case "--csvfilenameroot":
-                        Globalvariables.Csvfilenameroot = Splitargument[1];
-                        break;
-                    case "-H":
-                    case "-h":
-                    case "-U":
-                    case "-u":
-                    case "--help":
-                    case "--usage":
-                        Program.Writetoconsole(Program.VersionString());
-                        Program.Writetoconsole(Program.UsageString());
-                        Environment.Exit(0);
-                        break;
-                    case "-L":
-                    case "--logfilepath":
-                        Globalvariables.Logfilepath = Splitargument[1];
-                        break;
-                    case "-l":
-                    case "--logfilename":
-                        Globalvariables.Logfilename = Splitargument[1];
-                        break;
-                    case "-O":
-                    case "--pathtokmlfiles":
-                        Globalvariables.Originpath = Splitargument[1];
-                        break;
-                    case "-o":
-                    case "--originfilenamefilter":
-                        Globalvariables.Originfilenamefilter = Splitargument[1];
-                        break;
-                    case "-V":
-                    case "--verbosity":
-                        Globalvariables.Verbosity = Splitargument[1];
-                        break;
-                    case "-v":
-                    case "--version":
-                        Program.Writetoconsole(Program.VersionString());
-                        Environment.Exit(0);
-                        break;
-                    default:
-                        Program.Writetoconsole(Program.VersionString());
-                        Program.Writetoconsole(Program.UsageString());
-                        Environment.Exit(0);
-                        break;
+                    String[] Splitargument = Argument.Split("=");
+                    switch (Splitargument[0])
+                    {
+                        case "-D":
+                        case "--pathforcsvfiles":
+                            Destinationpath = Splitargument[1];
+                            break;
+                        case "-d":
+                        case "--csvfilenameroot":
+                            Csvfilenameroot = Splitargument[1];
+                            break;
+                        case "-H":
+                        case "-h":
+                        case "-U":
+                        case "-u":
+                        case "--help":
+                        case "--usage":
+                            Writetoconsole(VersionString());
+                            Writetoconsole(UsageString());
+                            Environment.Exit(0);
+                            break;
+                        case "-L":
+                        case "--logfilepath":
+                            Logfilepath = Splitargument[1];
+                            break;
+                        case "-l":
+                        case "--logfilename":
+                            Logfilename = Splitargument[1];
+                            break;
+                        case "-O":
+                        case "--pathtokmlfiles":
+                            Originpath = Splitargument[1];
+                            break;
+                        case "-o":
+                        case "--originfilenamefilter":
+                            Originfilenamefilter = Splitargument[1];
+                            break;
+                        case "-V":
+                        case "--verbosity":
+                            Verbosity = Splitargument[1];
+                            break;
+                        case "-v":
+                        case "--version":
+                            Writetoconsole(VersionString());
+                            Environment.Exit(0);
+                            break;
+                        default:
+                            Writetoconsole(VersionString());
+                            Writetoconsole(UsageString());
+                            Environment.Exit(0);
+                            break;
+                    }
                 }
             }
-            Globalvariables.RefreshDependents();
-            if (File.Exists(Globalvariables.Logfile))
+            CalculateDerivedGlobalValues();
+            if (File.Exists(Logfile))
             {
-                File.Delete(Globalvariables.Logfile);
+                File.Delete(Logfile);
             }
-            Program.Writetoconsole(Program.VersionString());
-            Program.Writetolog(Program.VersionString());
-            if (Globalvariables.Verbosity == "all" || Globalvariables.Verbosity == "debug")
+            Writetoconsole(VersionString());
+            Writetolog(VersionString());
+            if (Verbosity == "all" || Verbosity == "debug")
             {
-                Program.Writetoconsole(Program.UsageString());
-                Program.Writetolog(Program.UsageString());
-                Program.Writetoconsole(Globalvariables.GlobalVariablesValues());
-                Program.Writetolog(Globalvariables.GlobalVariablesValues());
+                Writetoconsole(UsageString());
+                Writetolog(UsageString());
+                Writetoconsole(GlobalString());
+                Writetolog(GlobalString());
             }
+            EnumerateFoldersTask();
             //var KmlFile = Path.Combine(OriginPath, KmlFileName);
             //Console.WriteLine($"Working on file {KmlFile}.");
             //XElement KmlContent = XElement.Load(KmlFile);
@@ -178,6 +173,24 @@ namespace TS2020KMLtoCSVConverter
             //Console.ReadKey();
         }
 
+        static void CalculateDerivedGlobalValues()
+        {
+            Logfile = Path.Combine(Logfilepath, Logfilename);
+            Directorylist.Add(Originpath);
+        }
+
+        static String[] GlobalString()
+        {
+            String[] Values = { $"This log file is saved in the path {Logfilepath} with the name {Logfilename}.",
+                $"This log file verbosity is set to {Verbosity}.",
+                $"Kml files origin path = {Originpath}.",
+                $"Kml files name filter = {Originfilenamefilter}.",
+                $"Csv files destination path = {Destinationpath}.",
+                $"Csv files name root = {Csvfilenameroot}."
+            };
+            return Values;
+        }
+
         static String[] VersionString()
         {
             String[] Version =  { "Train Simulator 2020 KML to CSV Converter",
@@ -208,10 +221,10 @@ namespace TS2020KMLtoCSVConverter
         }
         static void Writetolog(String[] content)
         {
-            if (File.Exists(Globalvariables.Logfile))
-                File.AppendAllLines(Globalvariables.Logfile, content);
+            if (File.Exists(Logfile))
+                File.AppendAllLines(Logfile, content);
             else
-                File.WriteAllLines(Globalvariables.Logfile, content);
+                File.WriteAllLines(Logfile, content);
         }
         static void Writetoconsole(String[] content)
         {
@@ -220,5 +233,20 @@ namespace TS2020KMLtoCSVConverter
                 Console.WriteLine(line);
             }
         }
+        static void EnumerateFoldersTask()
+        {
+            for (int counter = 0; counter < Directorylist.Count(); counter++)
+            {
+                EnumerateFolders(Directorylist[counter]);
+            }
+        }
+        static void EnumerateFolders(String path)
+            {
+                IEnumerable<String> newfolders = Directory.EnumerateDirectories(path);
+                foreach (String newfolder in newfolders)
+                {
+                    Directorylist.Add(newfolder);
+                }
+            }
     }
 }
